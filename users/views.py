@@ -10,7 +10,8 @@ class student_info(GenericAPIView):
             return HttpResponse("Login first")
         
         user = request.user
-        profile = user.user_profile
-        student = profile.student
+        profile = user.user_login_profile
+        carrier = profile.carrier
+        student = carrier.student
 
         return HttpResponse(str(student))
