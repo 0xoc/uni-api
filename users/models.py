@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django_enumfield import enum
-# Create your models here.
+from django_jalali.db import models as jmodels
+from .utils import *
 
 class UserLoginProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user_login_profile')
@@ -19,7 +20,7 @@ class Student(models.Model):
         return str(self.first_name) + " " + str(self.last_name)
 
 class College(models.Model):
-    title = models.CharField(max_length=255, blank=False)
+    title = models.CharField(max_length=255, blank=False, unique=True)
 
     def __str__(self):
         return str(self.title)
@@ -27,6 +28,9 @@ class College(models.Model):
 class Department(models.Model):
     title = models.CharField(max_length=255, blank=False)
     college = models.ForeignKey(College, on_delete=models.CASCADE, related_name='departments')
+
+    class Meta:
+        unique_together = (("title", "college"))
 
     def __str__(self):
         return str(self.title)
@@ -43,6 +47,9 @@ class Field(models.Model):
 
     title = models.CharField(max_length=255, blank=False)
     degree = enum.EnumField(DegreeType, blank=False, null=False)
+
+    class Meta:
+        unique_together = (("head_department", "title", "degree"))
 
     def __str__(self):
         return str(self.title)
@@ -70,9 +77,12 @@ class FieldCourse(models.Model):
 
 class Subfield(models.Model):
     field = models.ForeignKey(Field, on_delete=models.CASCADE, related_name='subfields')
-    field_courses = models.ManyToManyField(FieldCourse, blank=False, through='FieldCourseSubfield', related_name='subfields')
+    field_courses = models.ManyToManyField(FieldCourse, blank=False, through='FieldCourseSubfieldRelation', related_name='subfields')
 
     title = models.CharField(max_length=255, blank=False)
+
+    class Meta:
+        unique_together = (("field", "title"))
 
     def __str__(self):
         return str(self.title)
@@ -85,28 +95,28 @@ class FieldCourseType(enum.Enum):
     TAKHASOSI_EJBARI = 4
     EKHTIARI = 5
 
-class FieldCourseSubfield(models.Model):
+class FieldCourseSubfieldRelation(models.Model):
     field_course = models.ForeignKey(FieldCourse, on_delete=models.CASCADE)
     subfield = models.ForeignKey(Subfield, on_delete=models.CASCADE)
     suggested_term = models.PositiveSmallIntegerField(blank=True, null=True)
-    type = enum.EnumField(FieldCourseType, null=False, blank=False)
+    course_type = enum.EnumField(FieldCourseType, null=False, blank=False)
 
     class Meta:
         unique_together = (("field_course", "subfield"))
+
+    def __str__(self):
+        return ("[ "+str(self.field_course) + " ] for [ " + str(self.subfield) + " ] is [ " 
+            + get_key(FieldCourseType, self.course_type) + " ]")
 
 class CarrierStatusType(enum.Enum):
     STUDYING = 0
     GRADUATED = 1
     NOT_FINISHED = 2
 
-# class SemesterType(enum.Enum):
-#     NIMSAL_AVVAL = 0
-#     NIMSAL_DOVVOM = 1
-
 class Term(models.Model):
-    start_date = models.DateField(null=False, blank=False)
-    end_date = models.DateField(null=False, blank=False)
-    #semester = enum.EnumField(SemesterType, null=False, blank=False)
+    objects = jmodels.jManager()
+    start_date = jmodels.jDateField(null=False, blank=False)
+    end_date = jmodels.jDateField(null=False, blank=False)
 
     class Meta:
         unique_together = (("start_date", "end_date"))
@@ -176,60 +186,55 @@ class DayTime(models.Model):
     def __str__(self):
         return str(self.day_range)+" | Day: "+str(Day.get(self.day))
 
-class WeeklySchedule(models.Model):
-    day_times = models.ManyToManyField(DayTime, blank=False, related_name='weekly_schedules')
-
-    def __str__(self):
-        st = ""
-        for item in self.day_times.all():
-            st += str(item) + " ~ "
-        return st
-
-
-
 class Course(models.Model):
     field_course = models.ForeignKey(FieldCourse, on_delete=models.CASCADE, related_name = 'courses')
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name = 'courses')
-    subfields = models.ManyToManyField(Subfield, blank=False, related_name='allowed_courses')
-    departments = models.ManyToManyField(Department, blank=False, related_name='allowed_courses')
-    professors = models.ManyToManyField(Professor, blank=False, through = 'Teaches', related_name='courses')
-    carriers = models.ManyToManyField(Carrier, blank=True, through = 'Attends', related_name='registered_courses')
+    subfields = models.ManyToManyField(Subfield, blank=True, related_name='allowed_courses', verbose_name='Subfields allowed to register the course')
+    departments = models.ManyToManyField(Department, blank=True, related_name='allowed_courses', verbose_name='Departments allowed to register the course')
+    professors = models.ManyToManyField(Professor, blank=False, through = 'Teach', related_name='courses')
+    carriers = models.ManyToManyField(Carrier, blank=True, through = 'Attend', related_name='registered_courses')
     term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name = 'courses')
 
-    midterm_exam_date = models.DateTimeField(null=True, blank=True)
-    final_exam_date = models.DateTimeField(null=True, blank=True)
+    objects = jmodels.jManager()
+    midterm_exam_date = jmodels.jDateTimeField(null=True, blank=True)
+    final_exam_date = jmodels.jDateTimeField(null=True, blank=True)
     section_number = models.PositiveSmallIntegerField(blank=False, null=False)
     capacity = models.PositiveSmallIntegerField(blank=False, null=False)
     room_number = models.PositiveSmallIntegerField(blank=True, null=True)
-    students_gender = enum.EnumField(GenderTypeAllowed, blank=False, null=False)
-    weekly_schedule = models.ForeignKey(WeeklySchedule, on_delete=models.CASCADE, related_name='courses')
+    students_gender = enum.EnumField(GenderTypeAllowed, blank=False, null=False, verbose_name='Genders allowed to register the course')
+    weekly_schedule = models.ManyToManyField(DayTime, blank=False,  through = 'DayTimeCourseRelation', related_name='courses')
 
     class Meta:
         unique_together = (("field_course", "term", "section_number", "room_number"))
 
     def __str__(self):
-        return str(self.field_course)+" | Section "+str(self.section_number)
+        return "ID: "+str(self.field_course)+" | Section: "+str(self.section_number)
 
+class DayTimeCourseRelation(models.Model):
+    day_time = models.ForeignKey(DayTime, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
 
-class Teaches(models.Model):
+    class Meta:
+        unique_together = (("day_time","course"))
+    
+    def __str__(self):
+        return "Course: [ "+str(self.course)+" ]  Time: [ "+str(self.day_time)+" ]"
+
+class Teach(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     professor = models.ForeignKey(Professor, on_delete=models.CASCADE)
     percentage = models.PositiveSmallIntegerField(null=False, blank=False)
+
+    def __str__(self):
+        return "[ "+str(self.professor) + " ] teaches [ " + str(self.course) +" ]"
 
 class PreliminaryRegistration(models.Model):
     term = models.ForeignKey(Term, on_delete=models.CASCADE)
     field_course = models.ForeignKey(FieldCourse, on_delete=models.CASCADE)
     carrier = models.ForeignKey(Carrier, on_delete=models.CASCADE)
 
-class Grade(models.Model):
-    out_of_twenty = models.FloatField(null=False, blank=False, default=20.0) # az 20 nomre
-    value = models.FloatField(null=False, blank=False, default=0.0)
-    base_value = models.FloatField(null=False, blank=False, default=20.0)
-    date_examined = models.DateField(null=True, blank=True)
-    title = models.CharField(max_length=255, blank=True)
-
     def __str__(self):
-        return self.title
+        return "Preregistration of [ "+str(self.carrier)+" ] in [ "+str(self.field_course)+" ]"
 
 class CourseStatusType(enum.Enum):
     NOT_DEFINED = 0
@@ -241,11 +246,27 @@ class CourseApprovalState(enum.Enum):
     APPROVED = 1
     NOT_APPROVED = 2
 
-class Attends(models.Model):
+class Attend(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     carrier = models.ForeignKey(Carrier, on_delete=models.CASCADE)
-    grades = models.ManyToManyField(Grade, blank=True)
-
     status = enum.EnumField(CourseStatusType, null=False, blank=False)
     approved = enum.EnumField(CourseApprovalState, null=False, blank=False)
 
+    class Meta:
+        unique_together = (("course","carrier"))
+
+    def __str__(self):
+        return "[ "+str(self.carrier) + " ] attends [ " + str(self.course) +" ]"
+    
+
+class Grade(models.Model):
+    objects = jmodels.jManager()
+    out_of_twenty = models.FloatField(null=False, blank=False, default=20.0) # az 20 nomre
+    value = models.FloatField(null=False, blank=False, default=0.0)
+    base_value = models.FloatField(null=False, blank=False, default=20.0)
+    date_examined = jmodels.jDateField(null=True, blank=True)
+    title = models.CharField(max_length=255, blank=True)
+    attend = models.ForeignKey(Attend, on_delete=models.CASCADE, related_name="grades")
+
+    def __str__(self):
+        return self.title
