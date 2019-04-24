@@ -15,6 +15,7 @@ class UserLoginProfile(models.Model):
 class Student(models.Model):
     first_name = models.CharField(max_length=255, blank=False)
     last_name = models.CharField(max_length=255, blank=False)
+    pic = models.ImageField(upload_to = 'pic_folder/', default = 'pic_folder/no-img.jpg', validators=[validate_image_size])
 
     def __str__(self):
         return str(self.first_name) + " " + str(self.last_name)
@@ -137,9 +138,18 @@ class Carrier(models.Model):
     pre_reg_field_courses = models.ManyToManyField(FieldCourse, blank=True, through = 'PreliminaryRegistration', related_name='carriers')
     entry_term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name='entered_carriers')
     
+
+    @property
+    def entry_year(self):
+        return self.entry_term.start_date.year
+
     id = models.IntegerField(primary_key=True)
     status = enum.EnumField(CarrierStatusType, blank=False)
-    admission_type = enum.EnumField(AdmissionType, blank=False)
+    admission_type_num = enum.EnumField(AdmissionType, blank=False)
+
+    @property
+    def admission_type(self):
+        return get_key(AdmissionType, self.admission_type_num)
 
     def __str__(self):
         return str(self.student)+" | "+str(self.subfield)
