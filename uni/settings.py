@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'django_jalali',
     'users',
     'rest_framework',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'apiv1',
 ]
 
 MIDDLEWARE = [

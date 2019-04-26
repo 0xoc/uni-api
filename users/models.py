@@ -119,11 +119,35 @@ class Term(models.Model):
     start_date = jmodels.jDateField(null=False, blank=False)
     end_date = jmodels.jDateField(null=False, blank=False)
 
+    @property
+    def title(self):
+        if self.start_date.month > self.end_date.month:
+            return str(self.start_date.year) + "-SemesterB"
+        else:
+            return str(self.start_date.year) + "-SemesterA"
+
     class Meta:
         unique_together = (("start_date", "end_date"))
     
     def __str__(self):
-        return "Term: "+str(self.start_date)+" to "+str(self.end_date)
+        return "Term: "+str(self.start_date)+" to "+str(self.end_date) + " | " + self.title
+
+    def __init__(self, *args, **kwargs):
+        super(Term, self).__init__(* args, **kwargs)
+        if self.start_date is not None:
+            self.old_title = self.title
+        else:
+            self.old_title = " "
+
+    def clean(self):
+        if (self.end_date < self.start_date) or (self.end_date.year - self.start_date.year > 1):
+            raise ValidationError("Invalid Term interval!")
+        elif self.title != self.old_title and self.title in list(map(lambda x: x.title, Term.objects.all())):
+            raise ValidationError("a term with the title <%s> is already defined! Detail: <%s>" % (self.title, str(self)))
+    
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super(Term, self).save(*args, **kwargs)
 
 class AdmissionType(enum.Enum):
     ROOZANEH = 0
@@ -136,12 +160,17 @@ class Carrier(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='carriers')
     subfield = models.ForeignKey(Subfield, on_delete=models.CASCADE, related_name='carriers')
     pre_reg_field_courses = models.ManyToManyField(FieldCourse, blank=True, through = 'PreliminaryRegistration', related_name='carriers')
-    entry_term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name='entered_carriers')
-    
+
+    @property
+    def terms(self):
+        carrier_terms = list(map(lambda x: x.term, self.registered_courses.all()))
+        carrier_terms = list(set(carrier_terms))
+        carrier_terms.sort(key = lambda x: x.title)
+        return carrier_terms
 
     @property
     def entry_year(self):
-        return self.entry_term.start_date.year
+        return self.terms[0].start_date.year
 
     id = models.IntegerField(primary_key=True)
     status = enum.EnumField(CarrierStatusType, blank=False)
@@ -250,6 +279,7 @@ class CourseStatusType(enum.Enum):
     NOT_DEFINED = 0
     FAILED = 1
     PASSED = 2
+    DELETED = 3
 
 class CourseApprovalState(enum.Enum):
     NOT_DEFINED = 0

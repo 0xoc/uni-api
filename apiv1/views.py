@@ -10,4 +10,10 @@ class CarrierMiniProfileListView(ListAPIView):
     
     def get_queryset(self):
         return Carrier.objects.filter(pk=self.request.user.user_login_profile.carrier.pk)
-    
+
+class CarrierTermsListView(ListAPIView):
+    permission_classes = [IsAuthenticated, ]
+    serializer_class = TermDetailSerializer
+
+    def get_queryset(self):
+        return self.request.user.user_login_profile.carrier.terms

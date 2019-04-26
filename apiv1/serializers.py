@@ -21,3 +21,10 @@ class CarrierDetailSerializer(serializers.ModelSerializer):
         model = Carrier
         fields = ['student', 'subfield', 'entry_year', 'admission_type']
 
+class TermDetailSerializer(serializers.ModelSerializer):
+    start_date = serializers.StringRelatedField()
+    end_date = serializers.StringRelatedField()
+
+    class Meta:
+        model = Term
+        fields = ['pk', 'title', 'start_date', 'end_date']
