@@ -50,3 +50,41 @@ APIs:
     ]
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
+4 - API for recieving the courses summary for a specific term and carrier:
+
+    EXP:
+    url -X GET http://127.0.0.1:8000/api/v1/carrier/terms/1/ -H 'Authorization: Token f67877b6de83395d34bb02e5b8747501ebc71029'
+
+    RESULT:
+
+    [
+        {
+            "course_type_for_carrier": "TAKHASOSI_EJBARI",
+            "grade": 11.0,
+            "grade_status": "PASSED",
+            "carrier_course_status": "NOT_DEFINED",
+            "course": {
+            "section_number": 1,
+            "grades_status": "NOT_SENT",
+            "grades_average": null,
+            "min_grade": null,
+            "max_grade": null,
+            "field_course": { "serial_number": 1, "title": "OS LAB", "credit": 1 }
+            }
+        },
+        {
+            "course_type_for_carrier": null,
+            "grade": 0.0,
+            "grade_status": "FAILED",
+            "carrier_course_status": "NOT_DEFINED",
+            "course": {
+            "section_number": 1,
+            "grades_status": "NOT_SENT",
+            "grades_average": null,
+            "min_grade": null,
+            "max_grade": null,
+            "field_course": { "serial_number": 2, "title": "DB LAB", "credit": 1 }
+            }
+        }
+    ]
+-------------------------------------------------------------------------------------------------------------------------------------------------

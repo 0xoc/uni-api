@@ -17,3 +17,11 @@ class CarrierTermsListView(ListAPIView):
 
     def get_queryset(self):
         return self.request.user.user_login_profile.carrier.terms
+
+class CarrierTermDetailsListView(ListAPIView):
+    permission_classes = [IsAuthenticated, ]
+    serializer_class = AttendSerializer
+
+    def get_queryset(self):
+        term_id = self.kwargs['term_id']
+        return Attend.objects.filter(course__term__pk=term_id, carrier=self.request.user.user_login_profile.carrier)
