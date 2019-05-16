@@ -50,6 +50,17 @@ class DegreeType(enum.Enum):
     ARSHAD = 2
     DOCTORI = 3
 
+    def conv(name):
+        if name == 'KAARDANI':
+            return 'کاردانی'
+        if name == 'KARSHENASI':
+            return 'کارشناسی'
+        if name == 'ARSHAD':
+            return 'ارشد'
+        if name == 'DOCTORI':
+            return 'دکتری'
+        return ' '
+
 
 class Field(models.Model):
     head_department = models.ForeignKey(
@@ -95,7 +106,7 @@ class FieldCourse(models.Model):
         return int(self.credit_detail.practical_units) + int(self.credit_detail.theoritical_units)
 
     def __str__(self):
-        return str(self.title) + " | " + str(self.serial_number)
+        return str(self.title)
 
 
 class Subfield(models.Model):
@@ -119,6 +130,19 @@ class FieldCourseType(enum.Enum):
     PAYE = 2
     ASLI = 3
     TAKHASOSI_EJBARI = 4
+
+    def conv(name):
+        if name == 'EKHTIARI':
+            return 'اختیاری'
+        if name == 'OMUMI':
+            return 'عمومی'
+        if name == 'PAYE':
+            return 'پایه'
+        if name == 'ASLI':
+            return 'اصلی'
+        if name == 'TAKHASOSI_EJBARI':
+            return 'تخصصی اجباری'
+        return ' '
 
 
 class FieldCourseSubfieldRelation(models.Model):
@@ -144,6 +168,15 @@ class CarrierStatusType(enum.Enum):
     GRADUATED = 1
     NOT_FINISHED = 2
 
+    def conv(name):
+        if name == 'STUDYING':
+            return 'در حال تحصیل'
+        if name == 'GRADUATED':
+            return 'فارغ التحصیل'
+        if name == 'NOT_FINISHED':
+            return 'انصراف از تحصیل'
+        return ' '
+
 
 class Term(models.Model):
     objects = jmodels.jManager()
@@ -153,15 +186,15 @@ class Term(models.Model):
     @property
     def title(self):
         if self.start_date.month > self.end_date.month:
-            return str(self.start_date.year) + "-SemesterB"
+            return str(self.start_date.year) + " نیمسال دوم"
         else:
-            return str(self.start_date.year) + "-SemesterA"
+            return str(self.start_date.year) + " نیمسال اول"
 
     class Meta:
         unique_together = (("start_date", "end_date"))
 
     def __str__(self):
-        return "Term: "+str(self.start_date)+" to "+str(self.end_date) + " | " + self.title
+        return self.title
 
     def __init__(self, *args, **kwargs):
         super(Term, self).__init__(* args, **kwargs)
@@ -187,6 +220,17 @@ class AdmissionType(enum.Enum):
     SHABANEH = 1
     MEHMAN = 2
     ENTEGHALI = 3
+
+    def conv(name):
+        if name == 'ROOZANEH':
+            return 'روزانه'
+        if name == 'SHABANEH':
+            return 'شبانه'
+        if name == 'MEHMAN':
+            return 'مهمان'
+        if name == 'ENTEGHALI':
+            return 'انتقالی'
+        return ' '
 
 
 class Carrier(models.Model):
@@ -237,6 +281,17 @@ class GenderTypeAllowed(enum.Enum):
     FEMALE = 2
     BOTH = 3
 
+    def conv(name):
+        if name == 'NOT_DEFINED':
+            return 'تعیین نشده'
+        if name == 'MALE':
+            return 'مرد'
+        if name == 'FEMALE':
+            return 'زن'
+        if name == 'BOTH':
+            return 'مختلط'
+        return ' '
+
 
 class DayRange(models.Model):
     start = models.TimeField(blank=False, null=False)
@@ -258,6 +313,23 @@ class Day(enum.Enum):
     THURSDAY = 5
     FRIDAY = 6
 
+    def conv(name):
+        if name == 'SATURDAY':
+            return 'شنبه'
+        if name == 'SUNDAY':
+            return 'یکشنبه'
+        if name == 'MONDAY':
+            return 'دوشنبه'
+        if name == 'TUESDAY':
+            return 'سه شنبه'
+        if name == 'WEDNESDAY':
+            return 'چهارشنبه'
+        if name == 'THURSDAY':
+            return 'پنجشنبه'
+        if name == 'FRIDAY':
+            return 'جمعه'
+        return ' '
+
 
 class DayTime(models.Model):
     day_range = models.ForeignKey(DayRange, on_delete=models.CASCADE)
@@ -266,14 +338,27 @@ class DayTime(models.Model):
     class Meta:
         unique_together = (("day_range", "day"))
 
+    @property
+    def day_p(self):
+        return get_key(Day, self.day)
+
     def __str__(self):
-        return str(self.day_range)+" | Day: "+str(Day.get(self.day))
+        return str(self.day_range)+" | Day: " + self.day_p
 
 
 class CourseGradesStatus(enum.Enum):
     NOT_SENT = 0
     SENT = 1
     APPROVED = 2
+
+    def conv(name):
+        if name == 'NOT_SENT':
+            return 'ارسال نشده'
+        if name == 'SENT':
+            return 'ارسال شده'
+        if name == 'APPROVED':
+            return 'وصول شده'
+        return ' '
 
 
 class Course(models.Model):
@@ -340,7 +425,7 @@ class Course(models.Model):
             ("field_course", "term", "section_number", "room_number"))
 
     def __str__(self):
-        return "ID: "+str(self.field_course)+" | Section: "+str(self.section_number)
+        return str(self.field_course)+" | گروه "+str(self.section_number)
 
 
 class DayTimeCourseRelation(models.Model):
@@ -358,6 +443,10 @@ class Teach(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     professor = models.ForeignKey(Professor, on_delete=models.CASCADE)
     percentage = models.PositiveSmallIntegerField(null=False, blank=False)
+
+    @property
+    def term(self):
+        return self.course.term
 
     def __str__(self):
         return "[ "+str(self.professor) + " ] teaches [ " + str(self.course) + " ]"
@@ -377,11 +466,29 @@ class CourseApprovalState(enum.Enum):
     APPROVED = 1
     NOT_APPROVED = 2
 
+    def conv(name):
+        if name == 'NOT_DEFINED':
+            return 'تعیین نشده'
+        if name == 'APPROVED':
+            return 'تایید شده'
+        if name == 'NOT_APPROVED':
+            return 'تایید نشده'
+        return ' '
+
 
 class GradeState(enum.Enum):
     NOT_DEFINED = 0
     PASSED = 1
     FAILED = 2
+
+    def conv(name):
+        if name == 'NOT_DEFINED':
+            return 'تعیین نشده'
+        if name == 'PASSED':
+            return 'قبول'
+        if name == 'FAILED':
+            return 'مردود'
+        return ' '
 
 
 class Attend(models.Model):
@@ -397,6 +504,8 @@ class Attend(models.Model):
 
     @property
     def grade_status(self):
+        if not self.course.are_grades_approved:
+            return None
         if self.grade == None:
             return get_key(GradeState, GradeState.NOT_DEFINED)
         elif self.grade >= 10:
@@ -405,13 +514,16 @@ class Attend(models.Model):
 
     @property
     def course_type_for_carrier(self):
-        qs = self.carrier.subfield.fieldcoursesubfieldrelation_set.filter(field_course=self.course.field_course)
+        qs = self.carrier.subfield.fieldcoursesubfieldrelation_set.filter(
+            field_course=self.course.field_course)
         if len(qs) == 0:
             return None
         return qs[0].course_type
 
     @property
     def grade(self):
+        if not self.course.are_grades_approved:
+            return None
         if self.status == CourseApprovalState.NOT_APPROVED or self.deleted_by_carrier:
             return None
         sum = 0.0
@@ -436,6 +548,14 @@ class Grade(models.Model):
     title = models.CharField(max_length=255, blank=True)
     attend = models.ForeignKey(
         Attend, on_delete=models.CASCADE, related_name="grades")
+
+    @property
+    def carrier(self):
+        return self.attend.carrier 
+
+    @property
+    def course(self):
+        return self.attend.course
 
     def __str__(self):
         return "Grade for: "+str(self.attend)+" | Title :"+str(self.title)

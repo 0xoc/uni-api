@@ -53,7 +53,7 @@ APIs:
 4 - API for recieving the courses summary for a specific term and carrier:
 
     EXP:
-    url -X GET http://127.0.0.1:8000/api/v1/carrier/terms/1/ -H 'Authorization: Token f67877b6de83395d34bb02e5b8747501ebc71029'
+    curl -X GET http://127.0.0.1:8000/api/v1/carrier/terms/1/ -H 'Authorization: Token f67877b6de83395d34bb02e5b8747501ebc71029'
 
     RESULT:
 

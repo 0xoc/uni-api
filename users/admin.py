@@ -10,34 +10,76 @@ admin.site.register(Department)
 admin.site.register(Field)
 admin.site.register(FieldCourse)
 admin.site.register(Subfield)
-admin.site.register(FieldCourseSubfieldRelation)
+
+
+class FieldCourseSubfieldRelationAdmin(admin.ModelAdmin):
+    list_display = ['field_course', 'subfield', 'course_type']
+admin.site.register(FieldCourseSubfieldRelation, FieldCourseSubfieldRelationAdmin)
+
 admin.site.register(Carrier)
 admin.site.register(Professor)
 
+
 class JTerm(admin.ModelAdmin):
+    list_display = ['pk', 'title', 'start_date', 'end_date']
     list_filter = (
         ('start_date', JDateFieldListFilter),
         ('end_date', JDateFieldListFilter)
     )
+
+
 admin.site.register(Term, JTerm)
 
-class JCourse(admin.ModelAdmin):
+
+class CourseAdmin(admin.ModelAdmin):
+    list_display = ['field_course', 'section_number', 'term']
     list_filter = (
         ('midterm_exam_date', JDateFieldListFilter),
         ('final_exam_date', JDateFieldListFilter)
     )
-admin.site.register(Course, JCourse)
 
-admin.site.register(Teach)
-admin.site.register(PreliminaryRegistration)
-admin.site.register(Attend)
+
+admin.site.register(Course, CourseAdmin)
+
+class TeachAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'professor', 'course', 'term']
+admin.site.register(Teach, TeachAdmin)
+
+class PrRegAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'carrier', 'field_course', 'term']
+
+admin.site.register(PreliminaryRegistration, PrRegAdmin)
+
+
+class AttendAdmin(admin.ModelAdmin):
+    list_display = ['carrier', 'course', 'carrier_course_status']
+
+
+admin.site.register(Attend, AttendAdmin)
+
 admin.site.register(Credit)
 admin.site.register(DayRange)
-admin.site.register(DayTime)
-admin.site.register(DayTimeCourseRelation)
+
+
+class DayTimeAdmin(admin.ModelAdmin):
+    list_display = ['day_p', 'day_range']
+
+
+admin.site.register(DayTime, DayTimeAdmin)
+
+
+class DayTimeCourseRelationAdmin(admin.ModelAdmin):
+    list_display = ['course', 'day_time']
+
+
+admin.site.register(DayTimeCourseRelation, DayTimeCourseRelationAdmin)
+
 
 class JGrade(admin.ModelAdmin):
+    list_display = ['pk','carrier', 'course', 'title']
     list_filter = (
         ('date_examined', JDateFieldListFilter),
     )
+
+
 admin.site.register(Grade, JGrade)
