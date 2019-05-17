@@ -17,13 +17,16 @@ APIs:
     [
         {
             "student": {
-            "first_name": "Zahra",
-            "last_name": "Bagheri",
-            "pic": "pic_folder/caf1c5b054c0423f3b8c38b4af3c96cf.jpg"
-        },
-            "subfield": { "title": "IT Engineering", "field": "IT Engineering" },
-            "entry_year": 1389,
-            "admission_type": "SHABANEH"
+            "first_name": "سپیده",
+            "last_name": "جلالی",
+            "pic": "pic_folder/no-img.jpg"
+            },
+            "subfield": { "title": "نرم افزار", "field": "مهندسی کامپیوتر" },
+            "entry_year": 1397,
+            "admission_type": "روزانه",
+            "total_credits_taken": 6,
+            "total_credits_passed": 6,
+            "average": 18
         }
     ]
 -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -37,18 +40,17 @@ APIs:
     [
         {
             "pk": 2,
-            "title": "1396-SemesterA",
-            "start_date": "1396-07-01",
-            "end_date": "1396-11-01"
+            "title": "1397 نیمسال اول",
+            "start_date": "1397-07-01",
+            "end_date": "1397-10-30"
         },
         {
-            "pk": 1,
-            "title": "1397-SemesterB",
-            "start_date": "1397-12-01",
-            "end_date": "1398-04-31"
+            "pk": 4,
+            "title": "1398 نیمسال اول",
+            "start_date": "1398-07-01",
+            "end_date": "1398-10-30"
         }
     ]
-
 -------------------------------------------------------------------------------------------------------------------------------------------------
 4 - API for recieving the courses summary for a specific term and carrier:
 
@@ -59,32 +61,49 @@ APIs:
 
     [
         {
-            "course_type_for_carrier": "TAKHASOSI_EJBARI",
-            "grade": 11.0,
-            "grade_status": "PASSED",
-            "carrier_course_status": "NOT_DEFINED",
+            "course_type_for_carrier": "تخصصی اجباری",
+            "grade": null,
+            "grade_status": null,
+            "carrier_course_status": "تایید نشده",
             "course": {
             "section_number": 1,
-            "grades_status": "NOT_SENT",
+            "grades_status": "ارسال نشده",
             "grades_average": null,
             "min_grade": null,
             "max_grade": null,
-            "field_course": { "serial_number": 1, "title": "OS LAB", "credit": 1 }
+            "field_course": { "serial_number": 1, "title": "مدار الکتریکی", "credit": 3 }
             }
         },
         {
             "course_type_for_carrier": null,
-            "grade": 0.0,
-            "grade_status": "FAILED",
-            "carrier_course_status": "NOT_DEFINED",
+            "grade": null,
+            "grade_status": null,
+            "carrier_course_status": "تایید نشده",
             "course": {
-            "section_number": 1,
-            "grades_status": "NOT_SENT",
+            "section_number": 3,
+            "grades_status": "ارسال نشده",
             "grades_average": null,
             "min_grade": null,
             "max_grade": null,
-            "field_course": { "serial_number": 2, "title": "DB LAB", "credit": 1 }
+            "field_course": { "serial_number": 4, "title": "مدار منطقی", "credit": 3 }
             }
         }
     ]
+-------------------------------------------------------------------------------------------------------------------------------------------------
+5 - API for recieving term averages:
+
+    EXP:
+
+    curl -X GET http://127.0.0.1:8000/api/v1/carrier/terms/gradessummary/2/ -H 'Authorization: Token b993cee51045108d01ba529a2c25e01f2e5fac97'
+
+    RESULT:
+
+    {
+        "total_credits_taken": 6,
+        "total_credits_passed": 6,
+        "carrier_average": 18,
+        "field_average": 17,
+        "department_average": 17,
+        "college_average": 18
+    }
 -------------------------------------------------------------------------------------------------------------------------------------------------

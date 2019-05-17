@@ -24,7 +24,7 @@ class CarrierDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Carrier
-        fields = ['student', 'subfield', 'entry_year', 'admission_type']
+        fields = ['student', 'subfield', 'entry_year', 'admission_type', 'total_credits_taken', 'total_credits_passed', 'average']
 
 
 class FieldCourseSerializer(serializers.ModelSerializer):
@@ -58,3 +58,11 @@ class TermDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Term
         fields = ['pk', 'title', 'start_date', 'end_date']
+
+class TermSummarySerializer(serializers.Serializer):
+    total_credits_taken = serializers.IntegerField()
+    total_credits_passed = serializers.IntegerField()
+    carrier_average = serializers.FloatField()
+    field_average = serializers.FloatField()
+    department_average = serializers.FloatField()
+    college_average = serializers.FloatField()

@@ -9,8 +9,6 @@ class UserLoginProfile(models.Model):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, related_name='user_login_profile')
 
-    # todo: other login info
-
     def __str__(self):
         return str(self.user)
 
@@ -244,6 +242,25 @@ class Carrier(models.Model):
         FieldCourse, blank=True, through='PreliminaryRegistration', related_name='carriers')
 
     @property
+    def total_credits_taken(self):
+        attends = Attend.objects.filter(carrier = self).filter(deleted_by_carrier = False)
+        return sum(list(map(lambda x: x.course.field_course.credit , attends)))
+
+    @property
+    def total_credits_passed(self):
+        attends = list(filter(lambda x: x.carrier == self and x.grade_status == get_key(GradeState, GradeState.PASSED), Attend.objects.all()))
+        return sum(list(map(lambda x: x.course.field_course.credit , attends)))
+
+    @property
+    def average(self):
+        attends = list(filter(lambda x: x.carrier == self and x.grade != None, Attend.objects.all()))
+        attends = list(map(lambda x: (x.course.field_course.credit, x.grade * x.course.field_course.credit), attends))
+        total_credits = sum(list(map(lambda x: x[0], attends)))
+        if total_credits == 0:
+            return None
+        return sum(list(map(lambda x: x[1], attends))) / total_credits
+
+    @property
     def terms(self):
         carrier_terms = list(
             map(lambda x: x.term, self.registered_courses.all()))
@@ -253,6 +270,8 @@ class Carrier(models.Model):
 
     @property
     def entry_year(self):
+        if len(self.terms) == 0:
+            return None
         return self.terms[0].start_date.year
 
     id = models.IntegerField(primary_key=True)
@@ -390,6 +409,9 @@ class Course(models.Model):
         if not self.are_grades_approved:
             return None
         grades = list(map(lambda x: x.grade, self.attend_instances.all()))
+        grades = list(filter(lambda x: x != None, grades))
+        if len(grades) == 0:
+            return None
         return sum(grades)/len(grades)
 
     @property
@@ -397,6 +419,9 @@ class Course(models.Model):
         if not self.are_grades_approved:
             return None
         grades = list(map(lambda x: x.grade, self.attend_instances.all()))
+        grades = list(filter(lambda x: x != None, grades))
+        if len(grades) == 0:
+            return None
         return min(grades)
 
     @property
@@ -404,6 +429,9 @@ class Course(models.Model):
         if not self.are_grades_approved:
             return None
         grades = list(map(lambda x: x.grade, self.attend_instances.all()))
+        grades = list(filter(lambda x: x != None, grades))
+        if len(grades) == 0:
+            return None
         return max(grades)
 
     @property
@@ -462,17 +490,14 @@ class PreliminaryRegistration(models.Model):
 
 
 class CourseApprovalState(enum.Enum):
-    NOT_DEFINED = 0
+    NOT_APPROVED = 0
     APPROVED = 1
-    NOT_APPROVED = 2
 
     def conv(name):
-        if name == 'NOT_DEFINED':
-            return 'تعیین نشده'
-        if name == 'APPROVED':
-            return 'تایید شده'
         if name == 'NOT_APPROVED':
             return 'تایید نشده'
+        if name == 'APPROVED':
+            return 'تایید شده'
         return ' '
 
 
@@ -504,6 +529,8 @@ class Attend(models.Model):
 
     @property
     def grade_status(self):
+        if self.deleted_by_carrier:
+            return 'حذف'
         if not self.course.are_grades_approved:
             return None
         if self.grade == None:
@@ -513,23 +540,23 @@ class Attend(models.Model):
         return get_key(GradeState, GradeState.FAILED)
 
     @property
+    def grade(self):
+        if self.deleted_by_carrier:
+            return None
+        if not self.course.are_grades_approved:
+            return None
+        sum = 0.0
+        for item in self.grades.all():
+            sum += (item.value / item.base_value) * item.out_of_twenty
+        return sum
+
+    @property
     def course_type_for_carrier(self):
         qs = self.carrier.subfield.fieldcoursesubfieldrelation_set.filter(
             field_course=self.course.field_course)
         if len(qs) == 0:
             return None
         return qs[0].course_type
-
-    @property
-    def grade(self):
-        if not self.course.are_grades_approved:
-            return None
-        if self.status == CourseApprovalState.NOT_APPROVED or self.deleted_by_carrier:
-            return None
-        sum = 0.0
-        for item in self.grades.all():
-            sum += (item.value / item.base_value) * item.out_of_twenty
-        return sum
 
     class Meta:
         unique_together = (("course", "carrier"))
