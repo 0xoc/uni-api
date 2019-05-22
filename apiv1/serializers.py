@@ -48,7 +48,7 @@ class AttendSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Attend
-        fields = ['course_type_for_carrier', 'grade', 'grade_status', 'carrier_course_status', 'course']
+        fields = ['course_type_for_carrier', 'grade', 'grade_status', 'carrier_course_removal_status' , 'carrier_course_status', 'course']
 
 
 class TermDetailSerializer(serializers.ModelSerializer):

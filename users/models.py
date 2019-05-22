@@ -528,9 +528,15 @@ class Attend(models.Model):
         return get_key(CourseApprovalState, self.status)
 
     @property
-    def grade_status(self):
+    def carrier_course_removal_status(self):
         if self.deleted_by_carrier:
             return 'حذف'
+        return None
+
+    @property
+    def grade_status(self):
+        if self.deleted_by_carrier:
+            return None
         if not self.course.are_grades_approved:
             return None
         if self.grade == None:
