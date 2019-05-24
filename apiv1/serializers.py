@@ -59,6 +59,7 @@ class TermDetailSerializer(serializers.ModelSerializer):
         model = Term
         fields = ['pk', 'title', 'start_date', 'end_date']
 
+
 class TermSummarySerializer(serializers.Serializer):
     total_credits_taken = serializers.IntegerField()
     total_credits_passed = serializers.IntegerField()
@@ -66,3 +67,11 @@ class TermSummarySerializer(serializers.Serializer):
     field_average = serializers.FloatField()
     department_average = serializers.FloatField()
     college_average = serializers.FloatField()
+
+
+class PreRegistrationSerializer(serializers.ModelSerializer):
+    field_course = FieldCourseSerializer(required=True)
+
+    class Meta:
+        model = PreliminaryRegistration
+        fields = ['field_course']

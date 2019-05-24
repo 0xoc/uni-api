@@ -43,7 +43,7 @@ class TermSummaryView(APIView):
 
         carrier_attends = list(filter(lambda attend: attend.course.term.pk == term_id
                                       and attend.carrier == car and not attend.deleted_by_carrier, Attend.objects.all()))
-        
+
         field_attends = list(filter(lambda attend: attend.course.term.pk == term_id
                                     and attend.carrier.subfield.field == car.subfield.field
                                     and not attend.grade == None, Attend.objects.all()))
@@ -53,14 +53,14 @@ class TermSummaryView(APIView):
         college_attends = list(filter(lambda attend: attend.course.term.pk == term_id
                                       and attend.carrier.subfield.field.head_department.college == car.subfield.field.head_department.college
                                       and not attend.grade == None, Attend.objects.all()))
-        
+
         mydata = {
-            'total_credits_taken' : 0,
-            'total_credits_passed' : 0,
-            'carrier_average' : 0.0,
-            'field_average' : 0.0,
-            'department_average' : 0.0,
-            'college_average' : 0.0
+            'total_credits_taken': 0,
+            'total_credits_passed': 0,
+            'carrier_average': 0.0,
+            'field_average': 0.0,
+            'department_average': 0.0,
+            'college_average': 0.0
         }
 
         mydata["total_credits_taken"] = sum(
@@ -109,7 +109,15 @@ class TermSummaryView(APIView):
         else:
             mydata["college_average"] = sum(
                 list(map(lambda x: x[1], temp))) / total_credits
-        
 
         results = TermSummarySerializer(mydata, many=False).data
         return Response(results)
+
+
+class CarrierPreRegistrationView(ListAPIView):
+    permission_classes = [IsAuthenticated, ]
+    serializer_class = PreRegistrationSerializer
+
+    def get_queryset(self):
+        term_id = self.kwargs['term_id']
+        return PreliminaryRegistration.objects.filter(term__pk=term_id, carrier=self.request.user.user_login_profile.carrier)

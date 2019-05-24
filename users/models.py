@@ -264,6 +264,7 @@ class Carrier(models.Model):
     def terms(self):
         carrier_terms = list(
             map(lambda x: x.term, self.registered_courses.all()))
+        carrier_terms += list(map(lambda x: x.term, self.pre_reg_relations.all()))
         carrier_terms = list(set(carrier_terms))
         carrier_terms.sort(key=lambda x: x.title)
         return carrier_terms
@@ -483,7 +484,7 @@ class Teach(models.Model):
 class PreliminaryRegistration(models.Model):
     term = models.ForeignKey(Term, on_delete=models.CASCADE)
     field_course = models.ForeignKey(FieldCourse, on_delete=models.CASCADE)
-    carrier = models.ForeignKey(Carrier, on_delete=models.CASCADE)
+    carrier = models.ForeignKey(Carrier, on_delete=models.CASCADE, related_name="pre_reg_relations")
 
     def __str__(self):
         return "Preregistration of [ "+str(self.carrier)+" ] in [ "+str(self.field_course)+" ]"

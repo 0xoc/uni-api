@@ -5,5 +5,6 @@ urlpatterns = [
     path("carrier/mini_profile/", CarrierMiniProfileListView.as_view()),
     path("carrier/terms/", CarrierTermsListView.as_view()),
     path("carrier/terms/<term_id>/", CarrierTermDetailsListView.as_view()),
-    path("carrier/terms/gradessummary/<term_id>/", TermSummaryView.as_view())
+    path("carrier/terms/gradessummary/<term_id>/", TermSummaryView.as_view()),
+    path("carrier/terms/preregistration/<term_id>/", CarrierPreRegistrationView.as_view())
 ]
