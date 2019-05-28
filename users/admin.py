@@ -14,7 +14,10 @@ admin.site.register(Subfield)
 
 class FieldCourseSubfieldRelationAdmin(admin.ModelAdmin):
     list_display = ['field_course', 'subfield', 'course_type']
-admin.site.register(FieldCourseSubfieldRelation, FieldCourseSubfieldRelationAdmin)
+
+
+admin.site.register(FieldCourseSubfieldRelation,
+                    FieldCourseSubfieldRelationAdmin)
 
 admin.site.register(Carrier)
 admin.site.register(Professor)
@@ -41,12 +44,17 @@ class CourseAdmin(admin.ModelAdmin):
 
 admin.site.register(Course, CourseAdmin)
 
+
 class TeachAdmin(admin.ModelAdmin):
     list_display = ['pk', 'professor', 'course', 'term']
+
+
 admin.site.register(Teach, TeachAdmin)
+
 
 class PrRegAdmin(admin.ModelAdmin):
     list_display = ['pk', 'carrier', 'field_course', 'term']
+
 
 admin.site.register(PreliminaryRegistration, PrRegAdmin)
 
@@ -76,10 +84,21 @@ admin.site.register(DayTimeCourseRelation, DayTimeCourseRelationAdmin)
 
 
 class JGrade(admin.ModelAdmin):
-    list_display = ['pk','carrier', 'course', 'title']
+    list_display = ['pk', 'carrier', 'course', 'title']
     list_filter = (
         ('date_examined', JDateFieldListFilter),
     )
 
 
 admin.site.register(Grade, JGrade)
+
+
+class RoomAdmin(admin.ModelAdmin):
+    list_display = ['title', 'place']
+
+
+admin.site.register(Room, RoomAdmin)
+
+class ExamDateAdmin(admin.ModelAdmin):
+    list_display = ['day_range', 'day']
+admin.site.register(ExamDate, ExamDateAdmin)

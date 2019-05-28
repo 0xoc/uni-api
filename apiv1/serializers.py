@@ -24,14 +24,23 @@ class CarrierDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Carrier
-        fields = ['student', 'subfield', 'entry_year', 'admission_type', 'total_credits_taken', 'total_credits_passed', 'average']
+        fields = ['student', 'subfield', 'entry_year', 'admission_type',
+                  'total_credits_taken', 'total_credits_passed', 'average']
+
+
+class CreditDetailSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Credit
+        fields = ['practical_units', 'theoritical_units']
 
 
 class FieldCourseSerializer(serializers.ModelSerializer):
+    credit_detail = CreditDetailSerializer(required=True)
 
     class Meta:
         model = FieldCourse
-        fields = ['serial_number', 'title', 'credit']
+        fields = ['serial_number', 'title', 'credit', 'credit_detail']
 
 
 class CourseSummarySerializer(serializers.ModelSerializer):
@@ -48,7 +57,8 @@ class AttendSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Attend
-        fields = ['course_type_for_carrier', 'grade', 'grade_status', 'carrier_course_removal_status' , 'carrier_course_status', 'course']
+        fields = ['course_type_for_carrier', 'grade', 'grade_status',
+                  'carrier_course_removal_status', 'carrier_course_status', 'course']
 
 
 class TermDetailSerializer(serializers.ModelSerializer):
@@ -75,3 +85,35 @@ class PreRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = PreliminaryRegistration
         fields = ['field_course']
+
+
+class DayRangeSerializer(serializers.ModelSerializer):
+    start = serializers.StringRelatedField()
+    end = serializers.StringRelatedField()
+
+    class Meta:
+        model = DayRange
+        fields = ['start', 'end']
+
+class ExamDateSerializer(serializers.ModelSerializer):
+    day_range = DayRangeSerializer()
+    day = serializers.StringRelatedField()
+
+    class Meta:
+        model = ExamDate
+        fields = ['day_range', 'day']
+
+
+class CourseInformationSerializer(serializers.ModelSerializer):
+    field_course = FieldCourseSerializer(required=True)
+    term = serializers.StringRelatedField()
+    room = serializers.StringRelatedField()
+    midterm_exam_date = ExamDateSerializer()
+    final_exam_date = ExamDateSerializer()
+
+    class Meta:
+        model = Course
+        fields = ['field_course', 'professors_list', 'section_number',
+                  'term', 'midterm_exam_date', 'final_exam_date', 'grades_status',
+                  'room', 'class_times', 'number_of_students_registered', 'capacity',
+                  'genders_allowed', 'subfields_allowed_to_register', 'departments_allowed_to_register']

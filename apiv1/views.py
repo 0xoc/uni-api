@@ -114,10 +114,21 @@ class TermSummaryView(APIView):
         return Response(results)
 
 
-class CarrierPreRegistrationView(ListAPIView):
+class CarrierPreRegistrationView(APIView):
     permission_classes = [IsAuthenticated, ]
     serializer_class = PreRegistrationSerializer
 
     def get_queryset(self):
         term_id = self.kwargs['term_id']
         return PreliminaryRegistration.objects.filter(term__pk=term_id, carrier=self.request.user.user_login_profile.carrier)
+
+class CourseInformationView(ListAPIView):
+    permission_classes = [IsAuthenticated, ]
+    serializer_class = CourseInformationSerializer
+    
+    def get_queryset(self):
+        course_serial = self.kwargs['course_serial']
+        term_id = self.kwargs['term_id']
+        section = self.kwargs['section']
+
+        return Course.objects.filter(field_course__serial_number=course_serial, term__pk=term_id, section_number=section)

@@ -63,8 +63,8 @@ class DegreeType(enum.Enum):
 class Field(models.Model):
     head_department = models.ForeignKey(
         Department, on_delete=models.CASCADE, related_name='main_fields')
-    departments = models.ManyToManyField(
-        Department, blank=False, related_name='fields')
+    other_departments = models.ManyToManyField(
+        Department, blank=True, related_name='fields')
 
     title = models.CharField(max_length=255, blank=False)
     degree = enum.EnumField(DegreeType, blank=False, null=False)
@@ -117,6 +117,10 @@ class Subfield(models.Model):
 
     class Meta:
         unique_together = (("field", "title"))
+
+    @property
+    def full_title(self):
+        return self.field.title + "، " + self.title
 
     def __str__(self):
         return str(self.title)
@@ -206,7 +210,7 @@ class Term(models.Model):
             raise ValidationError("Invalid Term interval!")
         elif self.title != self.old_title and self.title in list(map(lambda x: x.title, Term.objects.all())):
             raise ValidationError(
-                "a term with the title <%s> is already defined! Detail: <%s>" % (self.title, str(self)))
+                "A term with the title <%s> is already defined!" % self.title)
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -243,18 +247,22 @@ class Carrier(models.Model):
 
     @property
     def total_credits_taken(self):
-        attends = Attend.objects.filter(carrier = self).filter(deleted_by_carrier = False)
-        return sum(list(map(lambda x: x.course.field_course.credit , attends)))
+        attends = Attend.objects.filter(
+            carrier=self).filter(deleted_by_carrier=False)
+        return sum(list(map(lambda x: x.course.field_course.credit, attends)))
 
     @property
     def total_credits_passed(self):
-        attends = list(filter(lambda x: x.carrier == self and x.grade_status == get_key(GradeState, GradeState.PASSED), Attend.objects.all()))
-        return sum(list(map(lambda x: x.course.field_course.credit , attends)))
+        attends = list(filter(lambda x: x.carrier == self and x.grade_status == get_key(
+            GradeState, GradeState.PASSED), Attend.objects.all()))
+        return sum(list(map(lambda x: x.course.field_course.credit, attends)))
 
     @property
     def average(self):
-        attends = list(filter(lambda x: x.carrier == self and x.grade != None, Attend.objects.all()))
-        attends = list(map(lambda x: (x.course.field_course.credit, x.grade * x.course.field_course.credit), attends))
+        attends = list(filter(lambda x: x.carrier ==
+                              self and x.grade != None, Attend.objects.all()))
+        attends = list(map(lambda x: (x.course.field_course.credit,
+                                      x.grade * x.course.field_course.credit), attends))
         total_credits = sum(list(map(lambda x: x[0], attends)))
         if total_credits == 0:
             return None
@@ -264,7 +272,8 @@ class Carrier(models.Model):
     def terms(self):
         carrier_terms = list(
             map(lambda x: x.term, self.registered_courses.all()))
-        carrier_terms += list(map(lambda x: x.term, self.pre_reg_relations.all()))
+        carrier_terms += list(map(lambda x: x.term,
+                                  self.pre_reg_relations.all()))
         carrier_terms = list(set(carrier_terms))
         carrier_terms.sort(key=lambda x: x.title)
         return carrier_terms
@@ -288,11 +297,12 @@ class Carrier(models.Model):
 
 
 class Professor(models.Model):
+    nickname = models.CharField(max_length=255, blank=True)
     first_name = models.CharField(max_length=255, blank=False)
     last_name = models.CharField(max_length=255, blank=False)
 
     def __str__(self):
-        return str(self.first_name) + " " + str(self.last_name)
+        return str(self.nickname) + " " + str(self.first_name) + " " + str(self.last_name)
 
 
 class GenderTypeAllowed(enum.Enum):
@@ -365,6 +375,27 @@ class DayTime(models.Model):
     def __str__(self):
         return str(self.day_range)+" | Day: " + self.day_p
 
+class ExamDate(models.Model):
+    day_range = models.ForeignKey(DayRange, on_delete=models.CASCADE)
+    day = jmodels.jDateField(blank=False, null=False)
+
+    class Meta:
+        unique_together = (("day_range", "day"))
+
+    def __str__(self):
+        return str(self.day_range)+" | Date: " + str(self.day)
+
+
+class Room(models.Model):
+    title = models.CharField(max_length=255, blank=False)
+    place = models.CharField(max_length=255, blank=False)
+
+    def __str__(self):
+        return self.title + " " + self.place
+
+    class Meta:
+        unique_together = (("title", "place"))
+
 
 class CourseGradesStatus(enum.Enum):
     NOT_SENT = 0
@@ -398,6 +429,31 @@ class Course(models.Model):
         Term, on_delete=models.CASCADE, related_name='courses')
     grades_status_num = enum.EnumField(
         CourseGradesStatus, blank=False, null=False)
+
+    @property
+    def subfields_allowed_to_register(self):
+        temp_list = []
+        for item in self.subfields.all():
+            temp_list += [item.full_title]
+        return temp_list
+
+    @property
+    def departments_allowed_to_register(self):
+        temp_list = []
+        for item in self.departments.all():
+            temp_list += [item.title]
+        return temp_list
+
+    @property
+    def professors_list(self):
+        relations = Teach.objects.filter(course__pk=self.pk)
+        prof_list = []
+        for item in relations:
+            prof_list += [{
+                'professor': str(item.professor),
+                'percentage': item.percentage
+            }]
+        return prof_list
 
     @property
     def are_grades_approved(self):
@@ -439,19 +495,39 @@ class Course(models.Model):
     def grades_status(self):
         return get_key(CourseGradesStatus, self.grades_status_num)
     objects = jmodels.jManager()
-    midterm_exam_date = jmodels.jDateTimeField(null=True, blank=True)
-    final_exam_date = jmodels.jDateTimeField(null=True, blank=True)
+    midterm_exam_date = models.ForeignKey(ExamDate, on_delete=models.CASCADE, related_name='midterm_exams', null=True, blank=True)
+    final_exam_date = models.ForeignKey(ExamDate, on_delete=models.CASCADE, related_name='final_exams', null=True, blank=True)
     section_number = models.PositiveSmallIntegerField(blank=False, null=False)
     capacity = models.PositiveSmallIntegerField(blank=False, null=False)
-    room_number = models.PositiveSmallIntegerField(blank=True, null=True)
     students_gender = enum.EnumField(
         GenderTypeAllowed, blank=False, null=False, verbose_name='Genders allowed to register the course')
     weekly_schedule = models.ManyToManyField(
         DayTime, blank=False,  through='DayTimeCourseRelation', related_name='courses')
+    room = models.ForeignKey(
+        Room, on_delete=models.CASCADE, related_name='courses')
+
+    @property
+    def genders_allowed(self):
+        return get_key(GenderTypeAllowed ,self.students_gender)
+
+    @property
+    def class_times(self):
+        temp_list = []
+        for item in self.weekly_schedule.all():
+            temp_list += [{
+                'day' : item.day_p,
+                'start' : item.day_range.start,
+                'end' : item.day_range.end
+            }]
+        return temp_list
+
+    @property 
+    def number_of_students_registered(self):
+        temp = self.attend_instances.filter(deleted_by_carrier=False)
+        return len(temp)
 
     class Meta:
-        unique_together = (
-            ("field_course", "term", "section_number", "room_number"))
+        unique_together = (("field_course", "term", "section_number"))
 
     def __str__(self):
         return str(self.field_course)+" | گروه "+str(self.section_number)
@@ -484,7 +560,8 @@ class Teach(models.Model):
 class PreliminaryRegistration(models.Model):
     term = models.ForeignKey(Term, on_delete=models.CASCADE)
     field_course = models.ForeignKey(FieldCourse, on_delete=models.CASCADE)
-    carrier = models.ForeignKey(Carrier, on_delete=models.CASCADE, related_name="pre_reg_relations")
+    carrier = models.ForeignKey(
+        Carrier, on_delete=models.CASCADE, related_name="pre_reg_relations")
 
     def __str__(self):
         return "Preregistration of [ "+str(self.carrier)+" ] in [ "+str(self.field_course)+" ]"
@@ -585,7 +662,7 @@ class Grade(models.Model):
 
     @property
     def carrier(self):
-        return self.attend.carrier 
+        return self.attend.carrier
 
     @property
     def course(self):
