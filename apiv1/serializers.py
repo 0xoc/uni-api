@@ -117,3 +117,15 @@ class CourseInformationSerializer(serializers.ModelSerializer):
                   'term', 'midterm_exam_date', 'final_exam_date', 'grades_status',
                   'room', 'class_times', 'number_of_students_registered', 'capacity',
                   'genders_allowed', 'subfields_allowed_to_register', 'departments_allowed_to_register']
+
+
+class CarrierRecordsSummarySerializer(serializers.Serializer):
+    term_title = serializers.CharField()
+    total_credits_taken = serializers.IntegerField()
+    total_credits_passed = serializers.IntegerField()
+    average = serializers.FloatField()
+    credits_considered_in_average = serializers.IntegerField()
+    total_credits_taken_till_now = serializers.IntegerField()
+    total_credits_passed_till_now = serializers.IntegerField()
+    credits_considered_in_average_till_now = serializers.IntegerField()
+    average_till_now = serializers.FloatField()

@@ -7,5 +7,6 @@ urlpatterns = [
     path("carrier/terms/<term_id>/", CarrierTermDetailsListView.as_view()),
     path("carrier/terms/gradessummary/<term_id>/", TermSummaryView.as_view()),
     path("carrier/terms/preregistration/<term_id>/", CarrierPreRegistrationView.as_view()),
-    path("courses/<course_serial>/<term_id>/<section>/", CourseInformationView.as_view())
+    path("courses/<course_serial>/<term_id>/<section>/", CourseInformationView.as_view()),
+    path("carrier/records_summary/", CarrierRecordsSummaryView.as_view())
 ]

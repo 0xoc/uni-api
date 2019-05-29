@@ -114,7 +114,7 @@ class TermSummaryView(APIView):
         return Response(results)
 
 
-class CarrierPreRegistrationView(APIView):
+class CarrierPreRegistrationView(ListAPIView):
     permission_classes = [IsAuthenticated, ]
     serializer_class = PreRegistrationSerializer
 
@@ -122,13 +122,84 @@ class CarrierPreRegistrationView(APIView):
         term_id = self.kwargs['term_id']
         return PreliminaryRegistration.objects.filter(term__pk=term_id, carrier=self.request.user.user_login_profile.carrier)
 
+
 class CourseInformationView(ListAPIView):
     permission_classes = [IsAuthenticated, ]
     serializer_class = CourseInformationSerializer
-    
+
     def get_queryset(self):
         course_serial = self.kwargs['course_serial']
         term_id = self.kwargs['term_id']
         section = self.kwargs['section']
 
         return Course.objects.filter(field_course__serial_number=course_serial, term__pk=term_id, section_number=section)
+
+
+class CarrierRecordsSummaryView(APIView):
+    permission_classes = [IsAuthenticated, ]
+
+    def get(self, request, *args, **kwargs):
+        car = self.request.user.user_login_profile.carrier
+        temp_list = []
+
+        mydata = {
+            'term_title': " ",
+            'total_credits_taken': 0,
+            'total_credits_passed': 0,
+            'average': 0.0,
+            'credits_considered_in_average': 0,
+            'total_credits_taken_till_now': 0,
+            'total_credits_passed_till_now': 0,
+            'average_till_now': 0.0,
+            'credits_considered_in_average_till_now': 0
+        }
+
+        i = -1
+        for t in car.terms:
+            i += 1
+
+            carrier_attends = list(filter(lambda attend: attend.course.term.pk == t.pk
+                                          and attend.carrier == car and not attend.deleted_by_carrier, Attend.objects.all()))
+
+            mydata["term_title"] = t.title
+
+            mydata["total_credits_taken"] = sum(
+                list(map(lambda x: x.course.field_course.credit, carrier_attends)))
+
+            carrier_attends = list(
+                filter(lambda attend: attend.course.are_grades_approved, carrier_attends))
+            temp = list(map(lambda x: (x.course.field_course.credit,
+                                       x.course.field_course.credit * x.grade), carrier_attends))
+
+            total_credits = sum(list(map(lambda x: x[0], temp)))
+            mydata["credits_considered_in_average"] = total_credits
+            if total_credits == 0:
+                mydata["average"] = None
+            else:
+                mydata["average"] = sum(
+                    list(map(lambda x: x[1], temp))) / total_credits
+
+            carrier_attends = list(filter(lambda attend: attend.grade_status == get_key(
+                GradeState, GradeState.PASSED), carrier_attends))
+            mydata["total_credits_passed"] = sum(
+                list(map(lambda x: x.course.field_course.credit, carrier_attends)))
+
+            if i == 0:
+                mydata["total_credits_taken_till_now"] = mydata["total_credits_taken"]
+                mydata["total_credits_passed_till_now"] = mydata["total_credits_passed"]
+                mydata["average_till_now"] = mydata["average"]
+                mydata["credits_considered_in_average_till_now"] = mydata["credits_considered_in_average"]
+            else:
+                mydata["total_credits_taken_till_now"] = mydata["total_credits_taken"] + \
+                    temp_list[i-1]["total_credits_taken_till_now"]
+                mydata["total_credits_passed_till_now"] = mydata["total_credits_passed"] + \
+                    temp_list[i-1]["total_credits_passed_till_now"]
+                mydata["credits_considered_in_average_till_now"] = mydata["credits_considered_in_average"] + \
+                    temp_list[i-1]["credits_considered_in_average_till_now"]
+
+                mydata["average_till_now"] = (mydata["average"] * mydata["credits_considered_in_average"] + temp_list[i-1]["average_till_now"] * temp_list[i-1]
+                                              ["credits_considered_in_average_till_now"]) / (mydata["credits_considered_in_average"] + temp_list[i-1]["credits_considered_in_average_till_now"])
+
+            temp_list += [mydata.copy()]
+
+        return Response(CarrierRecordsSummarySerializer(temp_list, many=True).data)
