@@ -6,7 +6,12 @@ import django_jalali.admin as jadmin
 admin.site.register(UserLoginProfile)
 admin.site.register(Student)
 admin.site.register(College)
-admin.site.register(Department)
+
+class DepartmentAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'title', 'college']
+admin.site.register(Department, DepartmentAdmin)
+
+
 admin.site.register(Field)
 admin.site.register(FieldCourse)
 admin.site.register(Subfield)

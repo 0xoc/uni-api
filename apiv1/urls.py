@@ -10,5 +10,7 @@ urlpatterns = [
     path("courses/<course_serial>/<term_id>/<section>/", CourseInformationView.as_view()),
     path("carrier/records_summary/", CarrierRecordsSummaryView.as_view()),
     path("carrier/subfield_courses/", FieldCourseSubfieldRelationView.as_view()),
-    path("departments/", DepartmentsView.as_view())
+    path("departments/", DepartmentsView.as_view()),
+    path("terms/", AllTermsView.as_view()),
+    path("courses_schedule/<term_id>/<department_id>/", CoursesScheduleView.as_view()),
 ]

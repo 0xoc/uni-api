@@ -220,3 +220,21 @@ class DepartmentsView(ListAPIView):
     def get_queryset(self):
         return Department.objects.all()
 
+class AllTermsView(ListAPIView):
+    permission_classes = [IsAuthenticated, ]
+    serializer_class = TermDetailSerializer
+
+    def get_queryset(self):
+        temp_list = list(Term.objects.all())
+        temp_list.sort(key=lambda x: x.title)
+        return temp_list
+
+class CoursesScheduleView(ListAPIView):
+    permission_classes = [IsAuthenticated, ]
+    serializer_class = CourseInformationSummarySerializer
+
+    def get_queryset(self):
+        term_id = self.kwargs['term_id']
+        department_id = self.kwargs['department_id']
+
+        return Course.objects.filter(department__pk=department_id, term__pk=term_id)
