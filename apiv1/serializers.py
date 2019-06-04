@@ -43,6 +43,14 @@ class FieldCourseSerializer(serializers.ModelSerializer):
         fields = ['serial_number', 'title', 'credit', 'credit_detail']
 
 
+class FieldCourseSubfieldRelationSerializer(serializers.ModelSerializer):
+    field_course = FieldCourseSerializer(required=True)
+
+    class Meta:
+        model = FieldCourseSubfieldRelation
+        fields = ['field_course', 'suggested_term', 'course_type']
+
+
 class CourseSummarySerializer(serializers.ModelSerializer):
     field_course = FieldCourseSerializer(required=True)
 
@@ -94,6 +102,7 @@ class DayRangeSerializer(serializers.ModelSerializer):
     class Meta:
         model = DayRange
         fields = ['start', 'end']
+
 
 class ExamDateSerializer(serializers.ModelSerializer):
     day_range = DayRangeSerializer()

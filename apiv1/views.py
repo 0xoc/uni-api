@@ -203,3 +203,12 @@ class CarrierRecordsSummaryView(APIView):
             temp_list += [mydata.copy()]
 
         return Response(CarrierRecordsSummarySerializer(temp_list, many=True).data)
+
+
+class FieldCourseSubfieldRelationView(ListAPIView):
+    permission_classes = [IsAuthenticated, ]
+    serializer_class = FieldCourseSubfieldRelationSerializer
+
+    def get_queryset(self):
+        carrier_subfield = self.request.user.user_login_profile.carrier.subfield
+        return FieldCourseSubfieldRelation.objects.filter(subfield=carrier_subfield)
