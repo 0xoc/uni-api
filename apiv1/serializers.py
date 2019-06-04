@@ -138,3 +138,10 @@ class CarrierRecordsSummarySerializer(serializers.Serializer):
     total_credits_passed_till_now = serializers.IntegerField()
     credits_considered_in_average_till_now = serializers.IntegerField()
     average_till_now = serializers.FloatField()
+
+class DepartmentSerializer(serializers.ModelSerializer):
+    college = serializers.StringRelatedField()
+
+    class Meta:
+        model = Department
+        fields = ['pk', 'title', 'college']

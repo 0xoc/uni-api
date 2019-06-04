@@ -212,3 +212,11 @@ class FieldCourseSubfieldRelationView(ListAPIView):
     def get_queryset(self):
         carrier_subfield = self.request.user.user_login_profile.carrier.subfield
         return FieldCourseSubfieldRelation.objects.filter(subfield=carrier_subfield)
+
+class DepartmentsView(ListAPIView):
+    permission_classes = [IsAuthenticated, ]
+    serializer_class = DepartmentSerializer
+    
+    def get_queryset(self):
+        return Department.objects.all()
+
