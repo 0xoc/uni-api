@@ -24,7 +24,7 @@ class CarrierDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Carrier
-        fields = ['student', 'subfield', 'entry_year', 'admission_type',
+        fields = ['student', 'id', 'subfield', 'degree_type','entry_year', 'admission_type',
                   'total_credits_taken', 'total_credits_passed', 'average']
 
 

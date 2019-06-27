@@ -67,7 +67,7 @@ class Field(models.Model):
         Department, blank=True, related_name='fields')
 
     title = models.CharField(max_length=255, blank=False)
-    degree = enum.EnumField(DegreeType, blank=False, null=False)
+    degree = enum.EnumField(DegreeType, blank=False, null=False)   
 
     class Meta:
         unique_together = (("head_department", "title", "degree"))
@@ -244,6 +244,10 @@ class Carrier(models.Model):
         Subfield, on_delete=models.CASCADE, related_name='carriers')
     pre_reg_field_courses = models.ManyToManyField(
         FieldCourse, blank=True, through='PreliminaryRegistration', related_name='carriers')
+
+    @property
+    def degree_type(self):
+        return get_key(DegreeType, self.subfield.field.degree)
 
     @property
     def total_credits_taken(self):
