@@ -10,6 +10,13 @@ class StudentDetailSerializer(serializers.ModelSerializer):
         fields = ['first_name', 'last_name', 'pic']
 
 
+class StudentDetailSerializerNoPic(serializers.ModelSerializer):
+
+    class Meta:
+        model = Student
+        fields = ['first_name', 'last_name']
+
+
 class SubfieldDetailSerializer(serializers.ModelSerializer):
     field = serializers.StringRelatedField()
 
@@ -24,8 +31,17 @@ class CarrierDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Carrier
-        fields = ['student', 'id', 'subfield', 'degree_type','entry_year', 'admission_type',
+        fields = ['student', 'id', 'subfield', 'degree_type', 'entry_year', 'admission_type',
                   'total_credits_taken', 'total_credits_passed', 'average']
+
+
+class CarrierDetailSerializerNoPic(serializers.ModelSerializer):
+    student = StudentDetailSerializerNoPic(required=True)
+    subfield = SubfieldDetailSerializer(required=True)
+
+    class Meta:
+        model = Carrier
+        fields = ['student', 'id', 'subfield']
 
 
 class CreditDetailSerializer(serializers.ModelSerializer):
@@ -56,7 +72,7 @@ class CourseSummarySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ['section_number', 'grades_status',
+        fields = ['pk', 'section_number', 'grades_status',
                   'grades_average', 'min_grade', 'max_grade', 'field_course']
 
 
@@ -67,6 +83,14 @@ class AttendSerializer(serializers.ModelSerializer):
         model = Attend
         fields = ['course_type_for_carrier', 'grade', 'grade_status',
                   'carrier_course_removal_status', 'carrier_course_status', 'course']
+
+
+class AttendSerializerNoPic(serializers.ModelSerializer):
+    carrier = CarrierDetailSerializerNoPic(required=True)
+
+    class Meta:
+        model = Attend
+        fields = ['carrier', 'carrier_course_removal_status']
 
 
 class TermDetailSerializer(serializers.ModelSerializer):
@@ -153,4 +177,4 @@ class CourseInformationSummarySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ['field_course', 'section_number']
+        fields = ['pk', 'field_course', 'section_number']

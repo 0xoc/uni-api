@@ -31,6 +31,14 @@ class CarrierTermDetailsListView(ListAPIView):
         term_id = self.kwargs['term_id']
         return Attend.objects.filter(course__term__pk=term_id, carrier=self.request.user.user_login_profile.carrier)
 
+class CourseStudentsListView(ListAPIView):
+    permission_classes = [IsAuthenticated, ]
+    serializer_class = AttendSerializerNoPic
+
+    def get_queryset(self):
+        course_id = self.kwargs['course_id']
+        return Attend.objects.filter(course__pk=course_id)
+
 
 class TermSummaryView(APIView):
 
