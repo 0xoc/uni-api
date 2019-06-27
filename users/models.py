@@ -67,7 +67,7 @@ class Field(models.Model):
         Department, blank=True, related_name='fields')
 
     title = models.CharField(max_length=255, blank=False)
-    degree = enum.EnumField(DegreeType, blank=False, null=False)   
+    degree = enum.EnumField(DegreeType, blank=False, null=False)
 
     class Meta:
         unique_together = (("head_department", "title", "degree"))
@@ -379,6 +379,7 @@ class DayTime(models.Model):
     def __str__(self):
         return str(self.day_range)+" | Day: " + self.day_p
 
+
 class ExamDate(models.Model):
     day_range = models.ForeignKey(DayRange, on_delete=models.CASCADE)
     day = jmodels.jDateField(blank=False, null=False)
@@ -499,8 +500,10 @@ class Course(models.Model):
     def grades_status(self):
         return get_key(CourseGradesStatus, self.grades_status_num)
     objects = jmodels.jManager()
-    midterm_exam_date = models.ForeignKey(ExamDate, on_delete=models.CASCADE, related_name='midterm_exams', null=True, blank=True)
-    final_exam_date = models.ForeignKey(ExamDate, on_delete=models.CASCADE, related_name='final_exams', null=True, blank=True)
+    midterm_exam_date = models.ForeignKey(
+        ExamDate, on_delete=models.CASCADE, related_name='midterm_exams', null=True, blank=True)
+    final_exam_date = models.ForeignKey(
+        ExamDate, on_delete=models.CASCADE, related_name='final_exams', null=True, blank=True)
     section_number = models.PositiveSmallIntegerField(blank=False, null=False)
     capacity = models.PositiveSmallIntegerField(blank=False, null=False)
     students_gender = enum.EnumField(
@@ -512,20 +515,20 @@ class Course(models.Model):
 
     @property
     def genders_allowed(self):
-        return get_key(GenderTypeAllowed ,self.students_gender)
+        return get_key(GenderTypeAllowed, self.students_gender)
 
     @property
     def class_times(self):
         temp_list = []
         for item in self.weekly_schedule.all():
             temp_list += [{
-                'day' : item.day_p,
-                'start' : item.day_range.start,
-                'end' : item.day_range.end
+                'day': item.day_p,
+                'start': item.day_range.start,
+                'end': item.day_range.end
             }]
         return temp_list
 
-    @property 
+    @property
     def number_of_students_registered(self):
         temp = self.attend_instances.filter(deleted_by_carrier=False)
         return len(temp)
@@ -663,6 +666,10 @@ class Grade(models.Model):
     title = models.CharField(max_length=255, blank=True)
     attend = models.ForeignKey(
         Attend, on_delete=models.CASCADE, related_name="grades")
+
+    @property
+    def percentage(self):
+        return self.out_of_twenty*100/20.0
 
     @property
     def carrier(self):

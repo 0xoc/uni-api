@@ -146,7 +146,7 @@ class CourseInformationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ['field_course', 'professors_list', 'section_number',
+        fields = ['pk', 'field_course', 'professors_list', 'section_number',
                   'term', 'midterm_exam_date', 'final_exam_date', 'grades_status',
                   'room', 'class_times', 'number_of_students_registered', 'capacity',
                   'genders_allowed', 'subfields_allowed_to_register', 'departments_allowed_to_register']
@@ -178,3 +178,12 @@ class CourseInformationSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ['pk', 'field_course', 'section_number']
+
+
+class GradeSerializer(serializers.ModelSerializer):
+    date_examined = serializers.StringRelatedField()
+
+    class Meta:
+        model = Grade
+        fields = ['title', 'percentage',
+                  'value', 'base_value', 'date_examined']

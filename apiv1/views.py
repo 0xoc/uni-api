@@ -31,6 +31,7 @@ class CarrierTermDetailsListView(ListAPIView):
         term_id = self.kwargs['term_id']
         return Attend.objects.filter(course__term__pk=term_id, carrier=self.request.user.user_login_profile.carrier)
 
+
 class CourseStudentsListView(ListAPIView):
     permission_classes = [IsAuthenticated, ]
     serializer_class = AttendSerializerNoPic
@@ -136,11 +137,8 @@ class CourseInformationView(ListAPIView):
     serializer_class = CourseInformationSerializer
 
     def get_queryset(self):
-        course_serial = self.kwargs['course_serial']
-        term_id = self.kwargs['term_id']
-        section = self.kwargs['section']
-
-        return Course.objects.filter(field_course__serial_number=course_serial, term__pk=term_id, section_number=section)
+        course_id = self.kwargs['course_id']
+        return Course.objects.filter(pk=course_id)
 
 
 class CarrierRecordsSummaryView(APIView):
@@ -221,12 +219,14 @@ class FieldCourseSubfieldRelationView(ListAPIView):
         carrier_subfield = self.request.user.user_login_profile.carrier.subfield
         return FieldCourseSubfieldRelation.objects.filter(subfield=carrier_subfield)
 
+
 class DepartmentsView(ListAPIView):
     permission_classes = [IsAuthenticated, ]
     serializer_class = DepartmentSerializer
-    
+
     def get_queryset(self):
         return Department.objects.all()
+
 
 class AllTermsView(ListAPIView):
     permission_classes = [IsAuthenticated, ]
@@ -237,6 +237,7 @@ class AllTermsView(ListAPIView):
         temp_list.sort(key=lambda x: x.title)
         return temp_list
 
+
 class CoursesScheduleView(ListAPIView):
     permission_classes = [IsAuthenticated, ]
     serializer_class = CourseInformationSummarySerializer
@@ -246,3 +247,30 @@ class CoursesScheduleView(ListAPIView):
         department_id = self.kwargs['department_id']
 
         return Course.objects.filter(department__pk=department_id, term__pk=term_id)
+
+
+
+class StudentCourseGradesListView(ListAPIView):
+
+    def get_queryset(self):
+        course_id = self.kwargs['course_id']
+        return Grade.objects.filter(
+            attend__course__pk=course_id, attend__carrier__pk=self.request.user.user_login_profile.carrier.pk)
+
+    def list(self, request, *args, **kwargs):
+        course_id = self.kwargs['course_id']
+        queryset = self.get_queryset()
+        serializer = GradeSerializer(queryset, many=True)
+        attend = Attend.objects.filter(
+            course__pk=course_id, carrier__pk=self.request.user.user_login_profile.carrier.pk)
+        grade = None
+        if len(attend) != 0:
+            grade = attend[0].grade
+        if grade == None:
+            grade = 0.0
+        custom_dict = {
+            "final_grade": grade
+        }
+        response_list = serializer.data 
+        response_list.append(custom_dict)
+        return Response(response_list)
