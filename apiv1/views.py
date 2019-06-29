@@ -84,8 +84,7 @@ class TermSummaryView(APIView):
         if total_credits == 0:
             mydata["carrier_average"] = None
         else:
-            mydata["carrier_average"] = sum(
-                list(map(lambda x: x[1], temp))) / total_credits
+            mydata["carrier_average"] = round(sum(list(map(lambda x: x[1], temp))) / total_credits, 2)
 
         carrier_attends = list(filter(lambda attend: attend.grade_status == get_key(
             GradeState, GradeState.PASSED), carrier_attends))
@@ -98,8 +97,7 @@ class TermSummaryView(APIView):
         if total_credits == 0:
             mydata["field_average"] = None
         else:
-            mydata["field_average"] = sum(
-                list(map(lambda x: x[1], temp))) / total_credits
+            mydata["field_average"] = round(sum(list(map(lambda x: x[1], temp))) / total_credits, 2)
 
         temp = list(map(lambda x: (x.course.field_course.credit,
                                    x.course.field_course.credit * x.grade), department_attends))
@@ -107,8 +105,7 @@ class TermSummaryView(APIView):
         if total_credits == 0:
             mydata["department_average"] = None
         else:
-            mydata["department_average"] = sum(
-                list(map(lambda x: x[1], temp))) / total_credits
+            mydata["department_average"] = round(sum(list(map(lambda x: x[1], temp))) / total_credits, 2)
 
         temp = list(map(lambda x: (x.course.field_course.credit,
                                    x.course.field_course.credit * x.grade), college_attends))
@@ -116,8 +113,7 @@ class TermSummaryView(APIView):
         if total_credits == 0:
             mydata["college_average"] = None
         else:
-            mydata["college_average"] = sum(
-                list(map(lambda x: x[1], temp))) / total_credits
+            mydata["college_average"] = round(sum(list(map(lambda x: x[1], temp))) / total_credits, 2)
 
         results = TermSummarySerializer(mydata, many=False).data
         return Response(results)
@@ -182,8 +178,7 @@ class CarrierRecordsSummaryView(APIView):
             if total_credits == 0:
                 mydata["average"] = None
             else:
-                mydata["average"] = sum(
-                    list(map(lambda x: x[1], temp))) / total_credits
+                mydata["average"] = round(sum(list(map(lambda x: x[1], temp))) / total_credits, 2)
 
             carrier_attends = list(filter(lambda attend: attend.grade_status == get_key(
                 GradeState, GradeState.PASSED), carrier_attends))
@@ -203,8 +198,7 @@ class CarrierRecordsSummaryView(APIView):
                 mydata["credits_considered_in_average_till_now"] = mydata["credits_considered_in_average"] + \
                     temp_list[i-1]["credits_considered_in_average_till_now"]
 
-                mydata["average_till_now"] = (mydata["average"] * mydata["credits_considered_in_average"] + temp_list[i-1]["average_till_now"] * temp_list[i-1]
-                                              ["credits_considered_in_average_till_now"]) / (mydata["credits_considered_in_average"] + temp_list[i-1]["credits_considered_in_average_till_now"])
+                mydata["average_till_now"] = round((mydata["average"] * mydata["credits_considered_in_average"] + temp_list[i-1]["average_till_now"] * temp_list[i-1]["credits_considered_in_average_till_now"]) / (mydata["credits_considered_in_average"] + temp_list[i-1]["credits_considered_in_average_till_now"]),2)
 
             temp_list += [mydata.copy()]
 

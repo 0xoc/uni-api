@@ -188,9 +188,9 @@ class Term(models.Model):
     @property
     def title(self):
         if self.start_date.month > self.end_date.month:
-            return str(self.start_date.year) + " نیمسال دوم"
+            return str(self.start_date.year) + " دوم"
         else:
-            return str(self.start_date.year) + " نیمسال اول"
+            return str(self.start_date.year) + " اول"
 
     class Meta:
         unique_together = (("start_date", "end_date"))
@@ -474,7 +474,7 @@ class Course(models.Model):
         grades = list(filter(lambda x: x != None, grades))
         if len(grades) == 0:
             return None
-        return sum(grades)/len(grades)
+        return round(sum(grades)/len(grades),2)
 
     @property
     def min_grade(self):
@@ -639,7 +639,7 @@ class Attend(models.Model):
         sum = 0.0
         for item in self.grades.all():
             sum += (item.value / item.base_value) * item.out_of_twenty
-        return sum
+        return round(sum,2)
 
     @property
     def course_type_for_carrier(self):
